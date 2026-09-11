@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111111" />
+  <title>Mi chunõ</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast hidden"></div>
+
+  <section id="authView" class="view auth-wrap">
+    <div class="auth-card glass">
+      <div class="brand">Mi chunõ</div>
+      <p class="muted">Seu controle financeiro pessoal.</p>
+
+      <div class="tabs">
+        <button class="tab active" data-auth-tab="login">Entrar</button>
+        <button class="tab" data-auth-tab="register">Criar conta</button>
+      </div>
+
+      <form id="loginForm" class="stack auth-form">
+        <label>E-mail<input id="loginEmail" type="email" required autocomplete="email"></label>
+        <label>Senha<input id="loginPassword" type="password" required autocomplete="current-password" minlength="6"></label>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+
+      <form id="registerForm" class="stack auth-form hidden">
+        <label>Nome<input id="registerName" type="text" required maxlength="80"></label>
+        <label>E-mail<input id="registerEmail" type="email" required autocomplete="email"></label>
+        <label>Senha<input id="registerPassword" type="password" required minlength="6" autocomplete="new-password"></label>
+        <label>Confirmar senha<input id="registerPassword2" type="password" required minlength="6" autocomplete="new-password"></label>
+        <button class="primary" type="submit">Criar minha conta</button>
+      </form>
+
+      <div id="supabaseWarning" class="notice warning hidden">
+        Configure o Supabase em <b>config.js</b> para habilitar cadastro e login.
+      </div>
+    </div>
+  </section>
+
+  <section id="setupView" class="view hidden page-shell">
+    <header class="topbar"><div class="brand small">Mi chunõ</div><button id="setupLogout" class="ghost">Sair</button></header>
+    <main class="content narrow">
+      <div class="card">
+        <h1>Configuração inicial</h1>
+        <p class="muted">Defina seu nome e o dia em que você fecha suas finanças.</p>
+        <form id="setupForm" class="stack">
+          <label>Seu nome<input id="setupName" type="text" required maxlength="80"></label>
+          <label>Dia de fechamento<input id="setupClosingDay" type="number" min="1" max="28" required placeholder="Ex.: 5"></label>
+          <button class="primary" type="submit">Continuar</button>
+        </form>
+      </div>
+    </main>
+  </section>
+
+  <section id="appView" class="view hidden app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand small">Mi chunõ</div>
+      <nav>
+        <button class="nav-item active" data-page="dashboard">⌂ <span>Início</span></button>
+        <button class="nav-item" data-page="receitas">＋ <span>Receitas</span></button>
+        <button class="nav-item" data-page="despesas">− <span>Despesas</span></button>
+        <button class="nav-item" data-page="fechamento">✓ <span>Fechamento</span></button>
+        <button class="nav-item" data-page="historico">▤ <span>Histórico</span></button>
+        <button class="nav-item" data-page="projecoes">↗ <span>Projeções</span></button>
+        <button class="nav-item" data-page="configuracoes">⚙ <span>Configurações</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button id="toggleSidebar" class="ghost wide">☰ Recolher</button>
+        <button id="logoutBtn" class="ghost wide">Sair</button>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="mobile-topbar"><button id="mobileMenu" class="ghost">☰</button><div class="brand tiny">Mi chunõ</div></header>
+      <main class="content">
+
+        <section id="page-dashboard" class="page active-page">
+          <div class="hero-balance">
+            <div>
+              <span>Minha renda</span>
+              <strong id="balanceValue">R$ 0,00</strong>
+            </div>
+          </div>
+
+          <div class="messages">
+            <div id="balanceMessage" class="message">Seu saldo está zerado neste mês.</div>
+            <div id="closingMessage" class="message">Carregando data de fechamento...</div>
+          </div>
+
+          <div class="quick-grid">
+            <button class="quick-card" data-page-link="receitas">＋ Adicionar receita</button>
+            <button class="quick-card" data-page-link="despesas">− Adicionar despesa</button>
+            <button class="quick-card" data-page-link="fechamento">✓ Fechar mês</button>
+            <button class="quick-card" data-page-link="projecoes">↗ Projeções</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat card"><span>Receitas confirmadas</span><b id="incomeTotal">R$ 0,00</b></div>
+            <div class="stat card"><span>Despesas confirmadas</span><b id="expenseTotal">R$ 0,00</b></div>
+            <div class="stat card"><span>Lançamentos do mês</span><b id="entryCount">0</b></div>
+          </div>
+        </section>
+
+        <section id="page-receitas" class="page">
+          <div class="page-title"><div><h1>Receitas</h1><p class="muted">Cadastre receitas fixas e entradas do mês.</p></div></div>
+          <div class="two-col">
+            <div class="card">
+              <h2>Nova receita</h2>
+              <form id="incomeForm" class="stack compact">
+                <label>Nome<input id="incomeName" required></label>
+                <label>Valor<input id="incomeValue" inputmode="decimal" placeholder="0,00" required></label>
+                <label>Categoria<select id="incomeCategory"><option>Salário</option><option>Renda extra</option><option>Reembolso</option><option>Investimentos</option><option>Outros</option></select></label>
+                <label>Data<input id="incomeDate" type="date" required></label>
+                <label class="check"><input id="incomeConfirmed" type="checkbox" checked> Incluir no saldo do mês</label>
+                <label class="check"><input id="incomeFixed" type="checkbox"> Receita fixa</label>
+                <button class="primary" type="submit">Salvar receita</button>
+              </form>
+            </div>
+            <div class="card">
+              <div class="section-head"><h2>Receitas cadastradas</h2><span id="incomeListTotal" class="pill">R$ 0,00</span></div>
+              <div id="incomeList" class="list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-despesas" class="page">
+          <div class="page-title"><div><h1>Despesas</h1><p class="muted">Registre gastos fixos ou variáveis.</p></div></div>
+          <div class="two-col">
+            <div class="card">
+              <h2>Nova despesa</h2>
+              <form id="expenseForm" class="stack compact">
+                <label>Nome<input id="expenseName" required></label>
+                <label>Valor<input id="expenseValue" inputmode="decimal" placeholder="0,00" required></label>
+                <label>Categoria<select id="expenseCategory"><option>Moradia</option><option>Alimentação</option><option>Transporte</option><option>Dívidas</option><option>Lazer</option><option>Assinaturas</option><option>Saúde</option><option>Educação</option><option>Investimentos</option><option>Outros</option></select></label>
+                <label>Data<input id="expenseDate" type="date" required></label>
+                <label class="check"><input id="expenseConfirmed" type="checkbox" checked> Incluir no saldo do mês</label>
+                <label class="check"><input id="expenseFixed" type="checkbox"> Despesa fixa</label>
+                <button class="primary" type="submit">Salvar despesa</button>
+              </form>
+            </div>
+            <div class="card">
+              <div class="section-head"><h2>Despesas cadastradas</h2><span id="expenseListTotal" class="pill">R$ 0,00</span></div>
+              <div id="expenseList" class="list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-fechamento" class="page">
+          <div class="page-title"><div><h1>Fechamento do mês</h1><p class="muted">Marque o que realmente entrou no cálculo antes de fechar.</p></div></div>
+          <div class="card">
+            <div id="closingEntries" class="closing-list"></div>
+            <div class="closing-summary">
+              <div><span>Receitas</span><b id="closeIncome">R$ 0,00</b></div>
+              <div><span>Despesas</span><b id="closeExpense">R$ 0,00</b></div>
+              <div class="accent"><span>Subtotal</span><b id="closeBalance">R$ 0,00</b></div>
+            </div>
+            <button id="closeMonthBtn" class="primary big">Fechar mês</button>
+          </div>
+        </section>
+
+        <section id="page-historico" class="page">
+          <div class="page-title"><div><h1>Histórico</h1><p class="muted">Resumo dos meses já fechados.</p></div></div>
+          <div class="card"><div id="historyList" class="history-grid"></div></div>
+        </section>
+
+        <section id="page-projecoes" class="page">
+          <div class="page-title"><div><h1>Projeções</h1><p class="muted">Uma visão simples baseada nos seus meses fechados.</p></div></div>
+          <div class="stats-grid">
+            <div class="stat card"><span>Média de receitas</span><b id="avgIncome">R$ 0,00</b></div>
+            <div class="stat card"><span>Média de despesas</span><b id="avgExpense">R$ 0,00</b></div>
+            <div class="stat card"><span>Média de saldo</span><b id="avgBalance">R$ 0,00</b></div>
+          </div>
+          <div class="card"><h2>Observação</h2><p class="muted">Esta V1 usa médias simples. Depois podemos evoluir para metas, parcelas, previsão por categoria e cenários.</p></div>
+        </section>
+
+        <section id="page-configuracoes" class="page">
+          <div class="page-title"><div><h1>Configurações</h1><p class="muted">Dados da conta e segurança.</p></div></div>
+          <div class="two-col">
+            <div class="card">
+              <form id="settingsForm" class="stack">
+                <label>Nome<input id="settingsName" required></label>
+                <label>Dia de fechamento<input id="settingsClosingDay" type="number" min="1" max="28" required></label>
+                <button class="primary" type="submit">Salvar alterações</button>
+              </form>
+            </div>
+            <div class="card">
+              <h2>Backup</h2>
+              <p class="muted">Além do banco online, você pode baixar uma cópia dos seus dados.</p>
+              <button id="exportBtn" class="ghost wide">Exportar meus dados (.json)</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
